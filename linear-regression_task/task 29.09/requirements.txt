@@ -1,0 +1,8 @@
+scikit-learn
+pandas
+numpy
+statsmodels
+matplotlib
+seaborn
+pandas-profiling
+pickle

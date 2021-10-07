@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+<title>Search Page</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Predict Your air temperature</h1>
+
+    <div class="form">
+        <form action="/prediction_data" method = 'POST'>
+            <input type="text" name="Processtemperature[K]" placeholder="enter the Process temperature" required="required" >
+            <input type="text" name = "Rotationalspeed[rpm]" placeholder = "enter the Rotational speed" required = "required">
+            <input type="text" name = "Torque[Nm]" placeholder = "Enter the Torque speed" required = "required">
+            <input type="text" name = "Toolwear[min]" placeholder = "Enter the Tool ware" required = "required">
+            <input type="text" name = "Machine failure" placeholder = "enter the machine failure" required = "required">
+            <input type="text" name = "TWF" placeholder = "enter the tool ware failure" required = "required">
+            <input type="text" name = "HDF" placeholder = "enter the hard ware failure" required = "required">
+            <input type="text" name = "PWF" placeholder = "enter the power failure" required = "required">
+            <input type="text" name = "OSF" placeholder = "enter the sensors failure" required = "required">
+            <input type="text" name = "RNF" placeholder = "enter the rotational failure" required = "required">
+
+            <input type="submit" value="Predict">
+        </form>
+    </div>
+</div>
+{% endblock %}
+

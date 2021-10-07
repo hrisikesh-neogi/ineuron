@@ -1,0 +1,136 @@
+import cassandra
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
+import logging as lg
+
+lg.basicConfig(filename = 'ml_log.log', level=lg.INFO, format = '%(asctime)s:%(name)s:%(message)s' ) 
+
+""" at first provide the zip location, client_id, client_secret, keyspace name below """
+
+#connection variables
+
+table = 'mldlrishipract25'
+column = {'Air_temperature': 'decimal PRIMARY KEY', 'Process_temperature ':'decimal', 'Rotational_speed ':'decimal','Torque':'decimal', 'Tool_wear':'decimal',' Machine_failure' :'decimal', 'TWF':'decimal', 'HDF':'decimal','PWF':'decimal', 'OSF' :'decimal', 'RNF' :'decimal'}
+zip_loc = "E:\secure-connect-rishi.zip"
+client_id =  'ORkTvQTctPzoKWUeQdqaIURv' 
+client_secret =  'SwbMx3mpJdn,0gYpy-v8J2ZBwEp3xXZlsB30gNZ8lwGeuc6EQCrhqU+bszz16RBYuygxzK-y1FkNROyS,ljSZhXxT1r6_6So20y.tyGMqv.Gc,E3xUl1-w2,l9fzhZo4'
+keyspace = 'ml'
+
+def conenction(zip_loc, client_id, client_secret, keyspace):                      #table creation and db conenction in cassandra
+
+    """ PARAMS:
+               zip_loc : enter the location where your db zip is
+               client_id : enter the client id given from cassandra ( datastax astra)
+               client_secret : enter the client secret given from cassandra ( datastax astra)
+               keyspace : enter the keyspace name 
+    
+    
+    """
+    
+    
+
+
+    cloud_config = {
+        'secure_connect_bundle': zip_loc
+    }
+    auth_provider = PlainTextAuthProvider(str(client_id),
+                                            str(client_secret))
+    cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+    global session 
+    session = cluster.connect(str(keyspace))
+    row = session.execute("select release_version from system.local").one()
+    print('database connected')
+    lg.info(f'cassandra db:'+
+            f'\n database connected')
+
+    
+class cass_operation:
+    
+    """
+    for doing insertion operation into cassandra database.
+    cass_operation(data, table)
+     
+     PARAMS:
+            data : pass the values for inserting into db
+            table: give the table name in which the data is going to be inserted
+    
+    """
+    
+    def __init__(self, data, table, columns, zip_loc):
+         self.data = data
+         self.tab = table
+         self.columns = columns
+         self.zip_loc = zip_loc
+
+      
+
+    def create_table (self): #table creation and db conenction in cassandra
+        
+        conenction(self.zip_loc, client_id, client_secret, keyspace)
+
+        # concatenating columns and column types for table creation
+         
+
+        col_type_mix = [i+' '+j for i,j in self.columns.items()]
+        
+        # conenction(self.zip_loc, client_id, client_secret, keyspace) ## establishing connection to cassandra database
+
+        
+        query = f" CREATE TABLE IF NOT EXISTS {self.tab}({', '.join([i for i in col_type_mix])});"
+
+        row = session.execute(query).one()
+        print(row)
+        print('database connected and table created')
+        # lg.info(f'cassandra db:'+
+        #         f'\n database connected and {self.tab} has been created')
+
+    def cass_insert_data(self):  #inserting data to cass db
+        
+        conenction(self.zip_loc, client_id, client_secret, keyspace) ## establishing connection to cassandra database
+        database = cass_operation(self.data, self.tab, self.columns, self.zip_loc)
+        database.create_table()
+        data = tuple(self.data)
+        
+        #seperating columns and column types
+        col = [i for i in self.columns.keys()]
+        
+        ## insertion operations
+        
+        
+        query = f" insert into {keyspace}.{self.tab} ({', '.join([i for i in col])}) values{data};"
+        row = session.execute(query).one()
+        print(row, 'data inserted')
+        lg.info(f'cassandra db:'+
+                f'\n {self.data} are inserted into {keyspace}.{self.tab}')
+
+
+
+    # def download_data(self, path):
+    #     cloud_config = {
+    #         'secure_connect_bundle': str(self.zip)
+    #     }
+    #     auth_provider = PlainTextAuthProvider(str(self.client_id),
+    #                                           str(self.client_secret))
+    #     cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+    #     session = cluster.connect(str(self.keyspace))
+    #     query = f"select * from {self.keyspace}.{self.tab};"
+    #     exe = session.execute(query)
+    #     col = exe.column_names
+    #     c1 = []
+    #     for i in exe:
+    #         c1.append(i)
+
+    #     c = []
+    #     c.append(col)
+    #     for i in c1:
+    #         c2 = []
+    #         for j in range(0, len(c1) + 1):
+    #             c2.append(i[j])
+
+    #         c.append(c2)
+    #     with open(path, 'w', newline='\n') as file:
+    #         f = csv.writer(file)
+    #         f.writerows(c)
+    #         result = 'file has been downloaded'
+    #         lg.info(result)
+    #         print(result)
